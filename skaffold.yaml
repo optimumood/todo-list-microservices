@@ -1,0 +1,65 @@
+apiVersion: skaffold/v4beta3
+kind: Config
+metadata:
+  name: todo-microservices
+requires:
+  - configs: ["todo-microservices-cert"]
+build:
+  tagPolicy:
+    inputDigest: {}
+  artifacts:
+  - image: todo
+    context: todo
+  local: {}
+deploy:
+  helm:
+    releases:
+      - name: todo-secrets
+        chartPath: helm/secrets
+        namespace: todo
+        createNamespace: true
+        setValueTemplates:
+          mysqlPassword: "{{.MYSQL_PASSWORD}}"
+          mysqlRootPassword: "{{.MYSQL_ROOT_PASSWORD}}"
+      - name: mysql-secrets
+        chartPath: helm/secrets
+        namespace: mysql
+        createNamespace: true
+        setValues:
+          type: server
+        setValueTemplates:
+          mysqlPassword: "{{.MYSQL_PASSWORD}}"
+          mysqlRootPassword: "{{.MYSQL_ROOT_PASSWORD}}"
+      - name: mysql
+        remoteChart: mysql
+        repo: https://charts.bitnami.com/bitnami
+        namespace: mysql
+        version: 9.7.0
+        createNamespace: true
+        upgradeOnChange: true
+        setValues:
+          auth.existingSecret: mysql-secret
+          auth.username: user
+      - name: todo
+        chartPath: helm/todo
+        namespace: todo
+        createNamespace: true
+        setValueTemplates:
+          image: "{{.IMAGE_FULLY_QUALIFIED_todo}}"
+---
+apiVersion: skaffold/v4beta3
+kind: Config
+metadata:
+  name: todo-microservices-cert
+deploy:
+  helm:
+    releases:
+      - name: cert-manager
+        remoteChart: cert-manager
+        repo: https://charts.jetstack.io
+        namespace: cert-manager
+        version: 1.11.0
+        createNamespace: true
+        setValues:
+          namespace: cert-manager
+          installCRDs: true
