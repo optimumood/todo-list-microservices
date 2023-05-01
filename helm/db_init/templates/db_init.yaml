@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-init
+  namespace: mysql
+data:
+  todo.sql: |
+    CREATE DATABASE todo;
+    CREATE TABLE todo.tasks (
+      id INT unsigned NOT NULL AUTO_INCREMENT,
+      data VARCHAR(255) NOT NULL,
+      completed BOOLEAN NOT NULL DEFAULT FALSE,
+      date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id)
+    );

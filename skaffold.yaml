@@ -30,6 +30,10 @@ deploy:
         setValueTemplates:
           mysqlPassword: "{{.MYSQL_PASSWORD}}"
           mysqlRootPassword: "{{.MYSQL_ROOT_PASSWORD}}"
+      - name: db-init
+        chartPath: helm/db_init
+        namespace: mysql
+        createNamespace: true
       - name: mysql
         remoteChart: mysql
         repo: https://charts.bitnami.com/bitnami
@@ -40,6 +44,7 @@ deploy:
         setValues:
           auth.existingSecret: mysql-secret
           auth.username: user
+          initdbScriptsConfigMap: db-init
       - name: todo
         chartPath: helm/todo
         namespace: todo
